@@ -1,0 +1,21 @@
+framework by Qingg  
+
+Convention：
+app为应用目录，核心就是和app同级的文件夹里的文件
+控制器，模型，表的名字全都是单数,模型的名字是单词后加_model，因为model单词比controller短,
+文件名全小写，模型的文件名是类名+"_model.php"
+控制器的类名首字母大写
+模型文件的类名一样，是首字母大写的类名+"Model"
+视图文件的应该每控制器一个同名目录,下面是跟控制器的各个方法同名的带php后缀的文件名。比如view/stock/add.php
+
+app下目录：
+logs: 日志，按天分割
+pages: 静态页
+
+
+所有如xxx.com/admin/controller/method 的url会认为是后台管理，会调用controller->admin_method方法,及模版,可以在config.php里更改"ADMIN"的值
+
+使用mysql数据库，使用mysqli的过程方式
+每个表都有一个自增id字段
+每个表都有一个created字段，now()
+
