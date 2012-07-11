@@ -243,7 +243,7 @@ function get_this_controller($url) {
 function qlog($msg, $level="INFO") 
 {
 	$day = date("Ymd");
-	error_log(date("[Y-m-d H:i:s]-") ."[$level]-" ."$msg-" .$_SERVER['REQUEST_URI']."\n", 3,LOGFILE.DS."$day.log");
+	error_log(date("[Y-m-d H:i:s]-") ."[$level]-" ."[$msg]-[" .$_SERVER['REQUEST_URI']."]\n", 3,LOGFILE.DS."$day.log");
 }
 
 //网站根目录可能在域名的子目录下
@@ -362,7 +362,6 @@ class Model {
 	}
 	
 
-	
 	function dbQuery($sql) {
 		return $this->mydb->db_select($sql);
 	}
@@ -532,7 +531,13 @@ class Controller {
 
 	protected $outputFormat = "html";
 
-	//过滤还是放在各自的controller里。跟业务相关。
+	//过滤post里变量的类型,初步过滤而已，具体跟业务相关的过滤还得到具体业务类里实现, key:变量名, value:int/string/email/等
+	//todo
+	protected $filterPostData = array();
+
+	//post里必须的变量数量, key:方法名 value:数字
+	//todo
+	protected $argNum = array();
 	
 	function __construct() {
 	
@@ -543,11 +548,10 @@ class Controller {
 			//todo:这样好还是直接一个controller只调用自己的modle好($this->model->save,而不是比如$this->stock_model->save)？
 			$this->{$model} = loadModel($class);
 		}
-			
 	}
 	
 	function __call($name, $arg) {
-		qlog("no function in".get_class($this)."\n");
+		qlog("no function [$name] in Controller:".get_class($this)."\n");
 		exit;
 	}
 	
@@ -573,14 +577,9 @@ class Controller {
 
 	function __invoke($mvc) {
 		$method = $mvc[1];
-		$type = $_SERVER['REQUEST_METHOD'];
 		
-		//filter_var();
-		$this->getdata();
-
 		//check auth
 		if(!$this->checkAuth($mvc)) {
-			//echo "checkAuth() failed\n";
 			header("Location: /user/login");
 			exit;
 		}
@@ -589,7 +588,15 @@ class Controller {
 				
 		array_shift($mvc);
 		array_shift($mvc);
+
+		//filter_var();
+		//$type = $_SERVER['REQUEST_METHOD'];
+		$this->_postdata();
+
 		$this->{$method}($mvc);
+		
+		if(!$this->views)
+			$this->addView($method);
 
 		$this->output();
 	}
@@ -597,7 +604,7 @@ class Controller {
 
 	function addView($vname)
 	{
-		$vfile = APP.DS."view".DS.get_class($this).DS.$vname;
+		$vfile = APP.DS."view".DS.get_class($this).DS."$vname.php";
     	if(!file_exists($vfile)){
 			//header("Location: pages/404.php");
 			include(APP."/pages/404.php");
@@ -608,20 +615,23 @@ class Controller {
 		$this->views []= $vfile;
 	}
 
-	function getdata() {
-		$type = $_SERVER['REQUEST_METHOD'];
-
-		switch($type) {
-			case 'GET' :
-				//parse_str($_GET, $this->input);
-				break;
-			case 'POST' :
-				$this->indata = $_POST;
-				break;
-			default :
-				echo "woz data?";
-				break;
+	function _postdata($args)
+	{
+		/*
+		todo:可以在这里对参数进行统一过滤.方法是在controller类里定义一个数组名$args,
+		每个子类的构造函数里设置这个数组的值
+		$this->args = array("username" => "string", "email"=>"email","page"=>"num");
+		然后在这个函数里进行初级过滤
+		*/
+		/*
+		if (!filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL)) {
+			echo "E-Mail is not valid";
 		}
+		else {
+			echo "E-Mail is valid";
+		}
+		*/
+		$this->indata = $_POST;
 	}
 	
 	function outputHtml() {
@@ -732,7 +742,7 @@ class Mysqlop{
 	function db_select($sql) {
 		$total = array();
 		
-		qlog("SQL: *$sql*");
+		qlog("$sql","SQL");
 		$result = mysqli_query($this->con, $sql);
 
 		if (!$result) {
@@ -749,7 +759,7 @@ class Mysqlop{
 	
 	
 	function db_Unselect($sql) {
-		qlog("SQL:$sql");
+		qlog("$sql","SQL");
 
 		if (!mysqli_query($this->con, $sql)) {
 			qlog(mysqli_error($this->con).":*$sql*");
