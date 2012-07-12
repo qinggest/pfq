@@ -339,7 +339,7 @@ class Model {
 		if(!$this->table)
 			$this->table = strtolower(str_replace("Model","",$class));
 
-		$this->mydb = new Mysqlop;
+		$this->mydb = Mysqlop::getInstance();
 	}
 	
 	function __set($name, $value) {
@@ -713,18 +713,29 @@ class Controller {
 }
 
 class Mysqlop{
-	public $con = null;
+	private $con = null;
+	private static $_instance;
 	
-	function __construct() {
+	private function __construct() {
 		$this->db_login();
 	}
+	
+	private function __clone(){}
 
 
 	function __destruct() {
 		$this->db_logout();
 	}
 
-
+	public static function getInstance()
+	{
+		if(!self::$_instance instanceof self)
+			self::$_instance = new self();
+			
+		return self::$_instance;	
+	}
+	
+	
 	function db_login() {
 		$this->con = mysqli_connect(DBHOST, DBUSER, DBPW, DBNAME);
 		if (mysqli_connect_errno($this->con)) {
