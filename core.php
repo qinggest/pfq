@@ -325,7 +325,7 @@ class Model {
 	//todo static $mydb;
 	protected $mydb ;
 
-	protected $sqlArgs = array(
+	public $sqlArgs = array(
 						"fields" => "",
 						"table" => "",
 						"where" => "",
@@ -469,7 +469,7 @@ class Model {
 
 	function filterValue($value)
 	{
-		if (get_magic_quotes_gpc()) {
+		if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
 			$value = stripslashes($value);
 		}
 
@@ -615,7 +615,7 @@ class Controller {
 		$this->views []= $vfile;
 	}
 
-	function _postdata($args)
+	function _postdata()
 	{
 		/*
 		todo:可以在这里对参数进行统一过滤.方法是在controller类里定义一个数组名$args,
