@@ -3,7 +3,6 @@
 //debug_backtrace();
 //xdebug_start_trace("trace");
 
-	require("config.php");
 	session_start();
 
 	//反向代理
@@ -18,7 +17,10 @@
 	//set_include_path(get_include_path() . PS . ROOT. 'controller'. PS. ROOT. 'model');
  
 	$mvc = getMvc();
+
+	//todo: Reflection
 	$obj = loadMvc($mvc[0]);
+
 	if(!method_exists ($obj, $mvc[1])) {
 		//header("Location: /pages/404.php");
 		include(APP."/pages/404.php");
@@ -339,6 +341,7 @@ class Model {
 		if(!$this->table)
 			$this->table = strtolower(str_replace("Model","",$class));
 
+		//todo:strategy
 		$this->mydb = Mysqlop::getInstance();
 	}
 	
@@ -416,8 +419,8 @@ class Model {
 	}
 
 	function create($data, $table=null) {
-		$sql_key = null;
-		$sql_value = null;
+		$sqlk = null;
+		$sqlv = null;
 		
 		foreach ($data as $k => $v) {
 			$sqlk .= "`$k`,";
@@ -469,6 +472,9 @@ class Model {
 
 	function filterValue($value)
 	{
+		if(!$value)
+			return '';
+
 		if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
 			$value = stripslashes($value);
 		}
@@ -713,7 +719,7 @@ class Controller {
 }
 
 class Mysqlop{
-	private $con = null;
+	public $con = null;
 	private static $_instance;
 	
 	private function __construct() {
