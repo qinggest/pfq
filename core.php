@@ -4,6 +4,7 @@
 //xdebug_start_trace("trace");
 
 	session_start();
+	include("helper.php");
 
 	//反向代理
 	$host = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
