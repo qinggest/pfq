@@ -259,12 +259,26 @@ function getRealRoot($uri)
 	return ltrim(substr_replace($uri, "", 0, strlen($root)), "/");
 }
 
+function route($req)
+{
+	$rf = APP.DS.'router.php';
+	if(file_exists($rf)){
+		include($rf);
+		return preg_replace (array_keys($router), array_values($router), $req);
+	}
+}
+
 function getMvc() {
 	$prefix = null;
 	$mvc = array();
 
+	//反向代理
 	$req = getRequestUri();
+	//子目录
 	$req = getRealRoot($req);
+
+	//自定义路由
+	$req = route($req);
 	
 	if(!strlen($req) || $req=="index.php" || $req=="/") {
 		$req = INDEX;
@@ -289,37 +303,6 @@ function getMvc() {
 }
 
 
-function captcha() {
-
-	//生成验证码图片
-	Header("Content-type: image/PNG");
-	$im = imagecreate(44,18);
-	$back = ImageColorAllocate($im, 245,245,245);
-	imagefill($im,0,0,$back); //背景
-
-	srand((double)microtime()*1000000);
-	//生成4位数字
-	for($i=0;$i<4;$i++){
-	$font = ImageColorAllocate($im, rand(100,255),rand(0,100),rand(100,255));
-	$authnum=rand(1,9);
-	$vcodes.=$authnum;
-	imagestring($im, 5, 2+$i*10, 1, $authnum, $font);
-	}
-
-	for($i=0;$i<100;$i++) //加入干扰象素
-	{ 
-	$randcolor = ImageColorallocate($im,rand(0,255),rand(0,255),rand(0,255));
-	imagesetpixel($im, rand()%70 , rand()%30 , $randcolor);
-	} 
-	ImagePNG($im);
-	ImageDestroy($im);
-
-	$_SESSION['CAPTCHA'] = $vcodes;
-
-}
-
-
-	
 class Model {
 	//table name, default is same as Model name
 	protected $table = null;
@@ -692,13 +675,13 @@ class Controller {
 	}
 	
 	function checkSession() {
-		//var_dump($_POST);
 		if(isset($_SESSION['token']) && ($_POST['token'] == $_SESSION['token']) ){
 			return true;
 		}
 		
 		echo "server token ".$_SESSION['token']."##your token*".$_POST['token']."*session failed ";
 		$_SESSION['token'] = md5(uniqid(rand(), true));
+		unset($_SESSION['captcha']);
 		return false;
 	}
 

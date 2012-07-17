@@ -19,3 +19,7 @@ pages: 静态页
 每个表都有一个自增id字段
 每个表都有一个created字段，now()
 
+自定义路由在app目录下的router.php文件里定义一个router的数组，写好正则的规则即可
+
+一些定时脚本，cron，等可以在app目录下的script.php文件里实现;比如验证码就是在这里
+
